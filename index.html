@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NUR 114 Study Hub</title>
+<style>
+  :root{
+    --bg:#FAF9F5; --card:#FFFFFF; --line:#E2DFD3; --ink:#0F5B52;
+    --text:#221F19; --dim:#6E6A5C;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:16px/1.55 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+  h1{font-family:Georgia,"Iowan Old Style","Times New Roman",serif;font-size:22px;font-weight:700;margin:0;color:#fff}
+  .wrap{max-width:640px;margin:0 auto;padding:0 20px 60px}
+  header{background:linear-gradient(135deg,#1b2a4a,#33507e);box-shadow:0 4px 18px rgba(20,40,80,.18)}
+  header .bannerwrap{max-width:640px;margin:0 auto;padding:26px 20px 22px}
+  header .sub{color:#bcd6d3;font-size:13.5px;font-weight:600;margin-top:6px}
+  .lede{margin:22px 0 24px;color:#3a4d4f;font-size:14.5px;background:#fff;border:1px solid var(--line);
+    border-left:5px solid var(--ink);border-radius:0 10px 10px 0;padding:14px 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden}
+  .card-head{display:flex;align-items:center;gap:14px;padding:16px 18px;cursor:pointer;user-select:none}
+  .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+  .card-head .name{flex:1;font-weight:700;font-size:16px}
+  .card-head .arrow{font-size:13px;color:var(--dim);transition:transform .2s}
+  .card.open .arrow{transform:rotate(90deg)}
+  .card-body{max-height:0;overflow:hidden;transition:max-height .25s ease}
+  .card.open .card-body{max-height:220px}
+  .card-body-inner{padding:0 18px 18px;font-size:14px;color:var(--dim)}
+  .card-body-inner p{margin:0 0 12px}
+  .openbtn{display:inline-block;background:var(--ink);color:#fff;font-weight:700;font-size:14px;
+    padding:9px 16px;border-radius:8px;text-decoration:none}
+  .openbtn.disabled{background:#C9C6B8;color:#fff;pointer-events:none}
+  .status{display:inline-block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+    padding:2px 9px;border-radius:20px;margin-left:10px}
+  .status.ready{background:#EAF4EE;color:#1B7A57}
+  .status.pending{background:#F1F0E9;color:#6E6A5C}
+  footer{text-align:center;color:var(--dim);font-size:12.5px;margin-top:30px}
+</style>
+</head>
+<body>
+<header><div class="bannerwrap">
+  <h1>NUR 114 Study Hub</h1>
+</div></header>
+
+<div class="wrap">
+  <p class="lede"><strong>How this works:</strong> each module is its own self-contained study app — lessons, quizzes, and a practice exam. Tap a module below to expand it, then open it. Modules not built yet are shown as pending.</p>
+
+  <div id="modules"></div>
+
+  <footer>Built module by module — ask Claude to add the next one whenever you're ready.</footer>
+</div>
+
+<script>
+const MODULES = [
+  { name:"Module 1 — Growth & Development / Health Promotion", color:"#2e86c1", status:"ready",
+    desc:"Antepartum, Intrapartum, Postpartum, Newborn Care, Sexuality, Medications, Med Math, Quick Reference, Acronyms, and a 60-question Practice Exam + 20-question GTPAL quiz.",
+    href:"NUR114_Module1.html" },
+  { name:"Module 2", color:"#c0392b", status:"pending", desc:"Not yet built.", href:"#" },
+  { name:"Module 3", color:"#d68910", status:"pending", desc:"Not yet built.", href:"#" },
+  { name:"Module 4", color:"#8e44ad", status:"pending", desc:"Not yet built.", href:"#" },
+  { name:"Module 5", color:"#117864", status:"pending", desc:"Not yet built.", href:"#" },
+  { name:"Comprehensive Final Exam", color:"#273746", status:"pending", desc:"Cumulative across all modules — build this last.", href:"#" },
+];
+
+const container = document.getElementById("modules");
+MODULES.forEach((m, i) => {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <div class="card-head" data-i="${i}">
+      <span class="dot" style="background:${m.color}"></span>
+      <span class="name">${m.name}</span>
+      <span class="status ${m.status}">${m.status === "ready" ? "Ready" : "Pending"}</span>
+      <span class="arrow">▶</span>
+    </div>
+    <div class="card-body"><div class="card-body-inner">
+      <p>${m.desc}</p>
+      <a class="openbtn ${m.status === "pending" ? "disabled" : ""}" href="${m.href}">${m.status === "ready" ? "Open " + m.name.split(" —")[0] : "Not available yet"}</a>
+    </div></div>
+  `;
+  container.appendChild(card);
+});
+
+container.addEventListener("click", e => {
+  const head = e.target.closest(".card-head");
+  if (!head) return;
+  head.closest(".card").classList.toggle("open");
+});
+</script>
+</body>
+</html>
