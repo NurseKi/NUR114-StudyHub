@@ -136,7 +136,7 @@ if (window.ResizeObserver) {
     navigator.serviceWorker.register("sw.js").then(function(){ return navigator.serviceWorker.ready; }).then(function(){
       var tries=0;
       (function check(){
-        caches.open("nur114-hub-v8").then(function(c){ return c.keys(); }).then(function(keys){
+        caches.open("nur114-hub-v16").then(function(c){ return c.keys(); }).then(function(keys){
           var n=keys.filter(function(k){ return /NUR114_Module\d\.html$/.test(k.url); }).length;
           var eng=keys.some(function(k){ return /engine\/engine\.js/.test(k.url); });
           if(n && eng){ say("✓ Saved for offline use ("+n+" module"+(n===1?"":"s")+")."); }
