@@ -35,7 +35,7 @@ function matchDeck(set){
       if(c === 3 && r[4] === null && /alert/i.test(label)) label = "Alert";
       cols.push({ label: label, cls: COLS[(c - 1) % COLS.length], options: shuffle(opts), answer: r[c] });
     }
-    return { id: set.key + ":" + ri, title: plain(r[0]).length < 60 ? r[0] : set.cats[0], promptLabel: set.cats[0], prompt: r[0], cols: cols };
+    return { id: set.key + ":" + ri, title: plain(r[0]).length < 60 ? r[0] : set.cats[0], promptLabel: set.cats[0], prompt: r[0], cols: cols, why: set.why ? set.why[ri] : null };
   });
 }
 function sortDeck(set){
@@ -46,7 +46,7 @@ function sortDeck(set){
   });
   var names = set.groups.map(function(g){ return g[0]; });
   return shuffle(items).map(function(it, n){
-    return { id: set.key + ":" + plain(it.text).slice(0, 40), title: it.text, promptLabel: it.label, prompt: it.text, sort: true,
+    return { id: set.key + ":" + plain(it.text).slice(0, 40), title: it.text, promptLabel: it.label, prompt: it.text, sort: true, why: (set.why && set.why[it.text]) || set.groups[it.gi][3] || null,
       cols: [{ label: set.glabel || "Which group?", cls: "c-navy", big: true, keepOrder: true, options: names.slice(), answer: names[it.gi] }] };
   });
 }
@@ -96,6 +96,7 @@ Game.prototype.render = function(){
     return '<section class="cg-col ' + c.cls + '"><h5>' + c.label.replace(/&(?!amp;)/g, "&amp;") + '</h5><div class="cg-opts">' + opts + '</div>' + v + '</section>';
   }).join("");
   var all = Object.keys(this.ans).length === q.cols.length;
+  if(all && q.why) cols += '<div class="cg-why" style="grid-column:1/-1;margin-top:4px;padding:10px 12px;border-left:4px solid var(--cg-navy);background:var(--cg-navy-t);border-radius:8px;font-size:.92em;line-height:1.4"><b>Why:</b> ' + stripify(q.why) + '</div>';
   h += prompt + '<div class="cg-cols n' + Math.min(q.cols.length, 4) + '">' + cols + '</div>' +
     '<div class="cg-bar"><span class="cg-hint">' + (all ? "" : (q.cols.length > 1 ? "Answer every column to continue." : "Pick one to continue.")) + '</span><button type="button" class="cg-btn cg-next"' + (all ? "" : " disabled") + '>' + (this.i < this.deck.length - 1 ? "Next" : "See results") + '</button></div>';
   this.el.innerHTML = h; this.wire();
