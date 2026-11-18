@@ -38,7 +38,8 @@
   .status.pending{background:#F1F0E9;color:#6E6A5C}
   footer{text-align:center;color:var(--dim);font-size:12.5px;margin-top:30px}
   .hs-box{margin:20px 0 6px;position:relative}
-  .hs-in{width:100%;font:inherit;font-size:16px;padding:12px 40px 12px 14px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--text)}
+  .hs-ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);display:flex;color:#555;pointer-events:none}
+.hs-in{width:100%;font:inherit;font-size:16px;padding:12px 40px 12px 42px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--text)}
   .hs-in:focus{outline:none;border-color:var(--ink)}
   .hs-x{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;font-size:20px;color:var(--dim);cursor:pointer;padding:4px 8px}
   .hs-meta{font-size:12.5px;color:var(--dim);margin:6px 2px 8px}
@@ -58,7 +59,7 @@
 </div></header>
 
 <div class="wrap">
-  <div class="hs-box"><input id="hsIn" class="hs-in" type="text" enterkeyhint="search" placeholder="Search every module (e.g., lithium, GCS, RhoGAM)" autocomplete="off" aria-label="Search every module"><button id="hsX" class="hs-x" type="button" aria-label="Clear search" hidden>×</button></div>
+  <div class="hs-box"><span class="hs-ic" aria-hidden="true"><svg class="mg" viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2.6"/><line x1="15" y1="15" x2="21" y2="21" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span><input id="hsIn" class="hs-in" type="text" enterkeyhint="search" placeholder="Search every module (e.g., lithium, GCS, RhoGAM)" autocomplete="off" aria-label="Search every module"><button id="hsX" class="hs-x" type="button" aria-label="Clear search" hidden>×</button></div>
   <div id="hsMeta" class="hs-meta" hidden></div>
   <div id="hsRes" class="hs-res"></div>
   <p class="lede"><strong>How this works:</strong> each module is its own study app — lessons, quizzes, and a practice exam. Search above to find a topic in any module, or tap a module below to expand it, then open it.</p>
@@ -135,7 +136,7 @@ if (window.ResizeObserver) {
     navigator.serviceWorker.register("sw.js").then(function(){ return navigator.serviceWorker.ready; }).then(function(){
       var tries=0;
       (function check(){
-        caches.open("nur114-hub-v6").then(function(c){ return c.keys(); }).then(function(keys){
+        caches.open("nur114-hub-v8").then(function(c){ return c.keys(); }).then(function(keys){
           var n=keys.filter(function(k){ return /NUR114_Module\d\.html$/.test(k.url); }).length;
           var eng=keys.some(function(k){ return /engine\/engine\.js/.test(k.url); });
           if(n && eng){ say("✓ Saved for offline use ("+n+" module"+(n===1?"":"s")+")."); }
@@ -174,7 +175,7 @@ if (window.ResizeObserver) {
       });
       hits.sort(function(a,b){return b[0]-a[0];});
       meta.hidden=false; meta.textContent=hits.length?(hits.length+" lesson"+(hits.length===1?"":"s")+" found"+(hits.length>40?" — showing the top 40":"")):"No lessons found. Try a different word.";
-      res.innerHTML=hits.slice(0,40).map(function(h){ var e=h[1], url=(e.m==="F"?"NUR114_Final.html":"NUR114_Module"+e.m+".html")+"#"+e.id;
+      res.innerHTML=hits.slice(0,40).map(function(h){ var e=h[1], url=(e.m==="F"?"NUR114_Final.html":"NUR114_Module"+e.m+".html")+"?hl="+encodeURIComponent(inp.value.trim())+"#"+e.id;
         return '<a class="hs-item" href="'+url+'"><span class="hs-tag" style="background:'+COL[e.m]+'">'+(e.m==="F"?"Final":"Module "+e.m)+'</span><span class="hs-t">'+esc(e.t)+'</span><div class="hs-u">'+esc(e.u)+'</div><div class="hs-snip">'+snippet(e,terms)+'</div></a>'; }).join("");
     }).catch(function(){ meta.hidden=false; meta.textContent="Search couldn't load — open the hub once while online so it can be saved."; });
   }

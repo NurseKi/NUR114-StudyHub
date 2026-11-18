@@ -1,7 +1,7 @@
 // Offline helper for the NUR 114 Study Hub.
 // Saves the hub and every module on the device so they open without internet.
 // When online, it checks for a newer version first (3-second limit), then falls back to the saved copy.
-const CACHE = "nur114-hub-v6";
+const CACHE = "nur114-hub-v8";
 const FILES = ["./", "index.html", "NUR114_Module1.html", "NUR114_Module2.html", "NUR114_Module3.html",
                "NUR114_Module4.html", "NUR114_Module5.html", "NUR114_Final.html", "search_index.json",
                // shared study engine (used by every module)
