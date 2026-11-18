@@ -439,7 +439,7 @@ function decorateHome(){
   }
   var n = missKeys().length;
   if(n) h += '<button class="hx-missbtn" data-q="' + MISS_ID + '"><span>Review My Misses (' + n + ')</span><span class="ar" aria-hidden="true">›</span></button>';
-  h += '<div class="hx-search"><span class="ic" aria-hidden="true">🔍</span><input id="hx-q" type="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="' + escH(MODULE.searchHint ? "Search every lesson (e.g., " + MODULE.searchHint + ")" : "Search every lesson") + '" aria-label="Search every lesson"><button id="hx-clr" class="clr" type="button" aria-label="Clear search" data-hx-clear="1" hidden>✕</button></div><div id="hx-res"></div>';
+  h += '<div class="hx-search"><span class="ic" aria-hidden="true"><svg class="mg" viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2.6"/><line x1="15" y1="15" x2="21" y2="21" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span><input id="hx-q" type="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="' + escH(MODULE.searchHint ? "Search every lesson (e.g., " + MODULE.searchHint + ")" : "Search every lesson") + '" aria-label="Search every lesson"><button id="hx-clr" class="clr" type="button" aria-label="Clear search" data-hx-clear="1" hidden>✕</button></div><div id="hx-res"></div>';
   top.innerHTML = h;
   app.insertBefore(top, app.firstChild);
   var inp = document.getElementById("hx-q"); inp.value = SQ; if(SQ) renderResults();
@@ -633,4 +633,22 @@ window.NUR114_PROGRESS = { key:PKEY, get:function(){ return JSON.parse(JSON.stri
 window.NUR114_SETTINGS = { key:SKEY, get:function(){ return {examOnly:SET.examOnly, fs:SET.fs, theme:SET.theme || null, effectiveTheme:curTheme()}; }, badges:function(id){ return badgesOf(id).slice(); } };
 
 draw();   // re-render the current view with restored scores, ✓ marks, and banners
+
+/* ---------- arriving from the Study Hub search (?hl=words#lesson-id): jump to the first matching block ---------- */
+(function(){
+  var m = location.search.match(/[?&]hl=([^&]*)/); if(!m) return;
+  try{ history.replaceState(null, "", location.pathname + location.hash); }catch(e){}
+  if(S.view !== "lesson") return;
+  var terms = decodeURIComponent(m[1].replace(/\+/g, " ")).toLowerCase().split(/\s+/).filter(function(t){ return t.length > 1; });
+  if(!terms.length) return;
+  var els = Array.prototype.slice.call(app.querySelectorAll("[data-bi]")), hit = null, part = null;
+  for(var i = 0; i < els.length; i++){
+    var t = els[i].textContent.toLowerCase(), n = 0;
+    terms.forEach(function(w){ if(t.indexOf(w) >= 0) n++; });
+    if(n === terms.length){ hit = els[i]; break; }
+    if(n && !part) part = els[i];
+  }
+  hit = hit || part;
+  if(hit) setTimeout(function(){ goToBlock(+hit.dataset.bi); }, 350);
+})();
 })();
