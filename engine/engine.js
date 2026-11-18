@@ -444,6 +444,9 @@ function unitSectionCollapsibleHTML(u, ui){
 function home(){
   let h = '<p class="lede"><strong>How to use this:</strong> Each topic features a lesson ending with one review question. Many topics also include a standalone 5-question quiz (including select-all-that-apply items) — tap a title to read, or Quiz where available to jump straight to the questions. The colored dot next to each unit carries through to that unit\'s lessons and quizzes.</p>';
 
+  const anyOpen = UNITS.some((u,ui)=> u.group ? S.openGroups[u.group] : S.openUnits[ui]);
+  const allOpen = UNITS.every((u,ui)=> u.group ? S.openGroups[u.group] : S.openUnits[ui]);
+  h += '<div class="xc-bar"><button type="button" class="xc-btn" data-expandall="1"'+(allOpen?' disabled':'')+'>Expand all</button><button type="button" class="xc-btn" data-collapseall="1"'+(anyOpen?'':' disabled')+'>Collapse all</button></div>';
   const doneGroups = {};
   UNITS.forEach((u,ui)=>{
     if(!u.group){ h += unitSectionCollapsibleHTML(u, ui); return; }
@@ -639,6 +642,7 @@ app.addEventListener("click", e=>{
   const fc = e.target.closest(".flashcard");
   if(fc && S.view==="flash"){ S.flip = !S.flip; return draw(); }
   const t = e.target.closest("button");
+  if(t && (t.dataset.expandall || t.dataset.collapseall)){ const on = !!t.dataset.expandall; UNITS.forEach((u,ui)=>{ if(u.group) S.openGroups[u.group] = on; else S.openUnits[ui] = on; }); return draw(); }
   if(t && t.dataset.grouptoggle){ S.openGroups[t.dataset.grouptoggle] = !S.openGroups[t.dataset.grouptoggle]; return draw(); }
   if(t && t.dataset.unittoggle){ S.openUnits[t.dataset.unittoggle] = !S.openUnits[t.dataset.unittoggle]; return draw(); }
   if(!t){

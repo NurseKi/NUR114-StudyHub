@@ -352,7 +352,8 @@ function goToBlock(bi){
 /* ---------- export / import / merge ---------- */
 function b64enc(s){ return btoa(unescape(encodeURIComponent(s))); }
 function b64dec(s){ return decodeURIComponent(escape(atob(s))); }
-function exportObj(){ var o = JSON.parse(JSON.stringify(PG)); o.exported = Date.now(); return o; }
+function practiceGet(){ try{ return JSON.parse(localStorage.getItem("nur114-m" + MOD + ":practice")) || null; }catch(e){ return null; } }
+function exportObj(){ var o = JSON.parse(JSON.stringify(PG)); o.exported = Date.now(); var pr = practiceGet(); if(pr) o.practice = pr; return o; }
 function parseCode(txt){
   txt = String(txt || "").trim();
   if(!txt) return {err:"Paste a progress code (or choose a backup file) first."};
@@ -363,6 +364,7 @@ function parseCode(txt){
   if(o.v !== 1) return {err:"That code was made by a newer version of the app. Update this page and try again."};
   var p = sanitize(o, true);
   if(!p) return {err:"That code couldn't be read."};
+  if(o.practice && typeof o.practice === "object") p.practice = o.practice;
   return {p:p};
 }
 function mergeIn(inc){
@@ -376,6 +378,16 @@ function mergeIn(inc){
     if(!a){ PG.misses[k] = {n:b.n, t:b.t, h:b.h || hashOf(k)}; c.miss++; }
     else { a.n = Math.min(a.n, b.n); a.t = Math.max(a.t, b.t); }
   });
+  if(inc.practice){ // endless-game stats: keep whichever device has answered more; best streak = higher of the two
+    var loc = practiceGet() || {};
+    Object.keys(inc.practice).forEach(function(g){
+      var a = loc[g], b = inc.practice[g]; if(!b || typeof b !== "object" || typeof b.n !== "number") return;
+      if(!a){ loc[g] = b; c.games = (c.games || 0) + 1; return; }
+      if(b.n > (a.n || 0)){ a.n = b.n; a.ok = b.ok; a.streak = b.streak; a.by = b.by || {}; c.games = (c.games || 0) + 1; }
+      a.best = Math.max(a.best || 0, b.best || 0);
+    });
+    try{ localStorage.setItem("nur114-m" + MOD + ":practice", JSON.stringify(loc)); }catch(e){}
+  }
   save(); applyBest(); syncMiss();
   return c;
 }
@@ -384,7 +396,7 @@ function doImport(txt){
   var r = parseCode(txt);
   if(r.err){ setMsg("hx-imsg", "bad", r.err); return false; }
   var c = mergeIn(r.p);
-  FLASHMSG = {id:"hx-imsg", cls:"ok", html:"Progress merged: " + c.best + " higher score" + (c.best === 1 ? "" : "s") + ", " + c.read + " more read lesson" + (c.read === 1 ? "" : "s") + ", " + c.miss + " new miss" + (c.miss === 1 ? "" : "es") + "." + (STORE_OK ? "" : " (This browser can't save, so it lasts until you close the page.)")};
+  FLASHMSG = {id:"hx-imsg", cls:"ok", html:"Progress merged: " + c.best + " higher score" + (c.best === 1 ? "" : "s") + ", " + c.read + " more read lesson" + (c.read === 1 ? "" : "s") + ", " + c.miss + " new miss" + (c.miss === 1 ? "" : "es") + "." + (c.games ? " Game stats updated for " + c.games + " game" + (c.games === 1 ? "" : "s") + "." : "") + (STORE_OK ? "" : " (This browser can't save, so it lasts until you close the page.)")};
   SYNC_OPEN = true; draw();
   return true;
 }

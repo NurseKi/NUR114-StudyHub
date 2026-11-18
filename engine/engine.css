@@ -428,3 +428,5 @@ html:is([data-fz]) #app .matrix-table :is(th,td){overflow-wrap:normal;-webkit-hy
 .cg-mt{font-weight:700}
 .cg-tag{font-size:.74em;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:5px;padding:1px 7px;background:var(--cg-navy);color:var(--cg-card)}
 @media (prefers-reduced-motion:reduce){.cg-opt{transition:none}.cg-opt:hover:not([disabled]){transform:none}}
+
+.xc-bar{display:flex;justify-content:flex-end;gap:8px;margin:4px 0 10px}.xc-btn{font:inherit;font-size:.85em;font-weight:600;padding:6px 12px;border-radius:999px;border:1.5px solid var(--line,#E2DFD3);background:var(--card,#fff);color:inherit;cursor:pointer}.xc-btn[disabled]{opacity:.45;cursor:default}
