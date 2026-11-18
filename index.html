@@ -37,6 +37,19 @@
   .status.ready{background:#EAF4EE;color:#1B7A57}
   .status.pending{background:#F1F0E9;color:#6E6A5C}
   footer{text-align:center;color:var(--dim);font-size:12.5px;margin-top:30px}
+  .hs-box{margin:20px 0 6px;position:relative}
+  .hs-in{width:100%;font:inherit;font-size:16px;padding:12px 40px 12px 14px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--text)}
+  .hs-in:focus{outline:none;border-color:var(--ink)}
+  .hs-x{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;font-size:20px;color:var(--dim);cursor:pointer;padding:4px 8px}
+  .hs-meta{font-size:12.5px;color:var(--dim);margin:6px 2px 8px}
+  .hs-res{display:grid;gap:8px;margin-bottom:18px}
+  .hs-item{display:block;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-decoration:none;color:var(--text)}
+  .hs-item:hover{border-color:var(--ink)}
+  .hs-tag{display:inline-block;font-size:11px;font-weight:800;color:#fff;border-radius:20px;padding:1px 8px;margin-right:6px;vertical-align:1px}
+  .hs-t{font-weight:700}
+  .hs-u{font-size:12.5px;color:var(--dim)}
+  .hs-snip{font-size:13.5px;color:#3a4d4f;margin-top:4px;line-height:1.45}
+  .hs-snip mark{background:#FFF0B3;color:inherit;padding:0 1px;border-radius:2px}
 </style>
 </head>
 <body>
@@ -45,7 +58,10 @@
 </div></header>
 
 <div class="wrap">
-  <p class="lede"><strong>How this works:</strong> each module is its own study app — lessons, quizzes, and a practice exam. Tap a module below to expand it, then open it. Modules not built yet are shown as pending.</p>
+  <div class="hs-box"><input id="hsIn" class="hs-in" type="text" enterkeyhint="search" placeholder="Search every module (e.g., lithium, GCS, RhoGAM)" autocomplete="off" aria-label="Search every module"><button id="hsX" class="hs-x" type="button" aria-label="Clear search" hidden>×</button></div>
+  <div id="hsMeta" class="hs-meta" hidden></div>
+  <div id="hsRes" class="hs-res"></div>
+  <p class="lede"><strong>How this works:</strong> each module is its own study app — lessons, quizzes, and a practice exam. Search above to find a topic in any module, or tap a module below to expand it, then open it.</p>
 
   <div id="modules"></div>
 
@@ -67,9 +83,9 @@ const MODULES = [
     desc:"Perfusion Foundations: Heart A&amp;P &amp; Blood Flow, Cardiac Output/Preload/Afterload, Cardiac Labs &amp; the 12-Lead, Stress Test/Echo/TEE/Cardiac Cath, Decreased Cardiac Output. Dysrhythmias: Reading an ECG Strip, Sinus, Atrial, Ventricular (Lethal vs Non-Lethal), Pacemakers &amp; Heart Blocks, Treatment. Coronary Artery Disease, Angina &amp; CAD Care; Heart Failure Types, Left vs Right, Management. Clotting: DVT, Pulmonary Embolism, Stroke &amp; Stroke Care. Blood: Anemias, Sickle Cell, Hemophilia. Plus the full medication card set, Med Math with hemodynamic and cardiac drip math, Quick Reference, Master Charts &amp; Acronyms, Worksheets (Rhythm Worksheet, ACLS flowcharts), and Sky's Notes.",
     href:"NUR114_Module4.html" },
   { name:"Module 5 — Medical Emergencies", color:"#117864", status:"ready",
-    desc:"In progress. Med Math is ready now; lessons, medications, quizzes, practice exams, and games will be added as the material comes in.",
+    desc:"Emergency Basics (ABCs, primary/secondary survey, intubation &amp; ETCO₂), Increased Intracranial Pressure, Hydrocephaly, Burns, Poisonings &amp; Overdoses, Shock, Submersion Injuries, Environmental Emergencies, Anaphylaxis, Emergency Preparedness, Crisis Intervention &amp; SANE, Medications, Med Math (with ABGs and ROME), Worksheets (Adult Cardiac Arrest, Luke Kwon case), Sky's Notes, and endless Med Math and ABG games. Practice exams coming after the Dec 2 lecture.",
     href:"NUR114_Module5.html" },
-  { name:"Comprehensive Final Exam", color:"#273746", status:"pending", desc:"Cumulative across all modules — build this last.", href:"#" },
+  { name:"Comprehensive Final Exam", color:"#273746", status:"ready", desc:"Final exam overview, an alphabetized index of every exemplar and medication from Modules 1–5 (each linked to its lesson), and a glossary of key terms.", href:"NUR114_Final.html" },
 ];
 
 const container = document.getElementById("modules");
@@ -119,7 +135,7 @@ if (window.ResizeObserver) {
     navigator.serviceWorker.register("sw.js").then(function(){ return navigator.serviceWorker.ready; }).then(function(){
       var tries=0;
       (function check(){
-        caches.open("nur114-hub-v4").then(function(c){ return c.keys(); }).then(function(keys){
+        caches.open("nur114-hub-v6").then(function(c){ return c.keys(); }).then(function(keys){
           var n=keys.filter(function(k){ return /NUR114_Module\d\.html$/.test(k.url); }).length;
           var eng=keys.some(function(k){ return /engine\/engine\.js/.test(k.url); });
           if(n && eng){ say("✓ Saved for offline use ("+n+" module"+(n===1?"":"s")+")."); }
@@ -129,6 +145,42 @@ if (window.ResizeObserver) {
       })();
     }).catch(function(){ say("Couldn't turn on offline saving — reload this page while online."); });
   });
+})();
+</script>
+
+<script>
+/* App-wide search: loads search_index.json (all modules + Final page) on first use. */
+(function(){
+  var inp=document.getElementById("hsIn"), res=document.getElementById("hsRes"), meta=document.getElementById("hsMeta"), clr=document.getElementById("hsX");
+  var IDX=null, loading=null, timer=null;
+  var COL={"1":"#2e86c1","2":"#c0392b","3":"#d68910","4":"#8e44ad","5":"#117864","F":"#273746"};
+  function load(){ if(IDX) return Promise.resolve(IDX); if(!loading) loading=fetch("search_index.json").then(function(r){return r.json();}).then(function(d){ d.forEach(function(e){ e.lt=e.t.toLowerCase(); e.lx=e.x.toLowerCase(); }); IDX=d; return d; }); return loading; }
+  function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function snippet(e,terms){
+    var i=-1; for(var k=0;k<terms.length&&i<0;k++) i=e.lx.indexOf(terms[k]);
+    var s=i<0?e.x.slice(0,160):e.x.slice(Math.max(0,i-70),i+130);
+    var out=esc(s); terms.forEach(function(t){ if(t.length<2) return; out=out.replace(new RegExp("("+t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi"),"<mark>$1</mark>"); });
+    return (i>70?"… ":"")+out+" …";
+  }
+  function run(){
+    var q=inp.value.trim().toLowerCase(); clr.hidden=!q;
+    if(q.length<2){ res.innerHTML=""; meta.hidden=true; return; }
+    load().then(function(d){
+      var terms=q.split(/\s+/).filter(Boolean), hits=[];
+      d.forEach(function(e){
+        for(var k=0;k<terms.length;k++){ if(e.lt.indexOf(terms[k])<0&&e.lx.indexOf(terms[k])<0) return; }
+        var sc=0; terms.forEach(function(t){ if(e.lt.indexOf(t)>=0) sc+=50; var c=e.lx.split(t).length-1; sc+=Math.min(c,20); });
+        if(e.lt.indexOf(q)>=0) sc+=100; hits.push([sc,e]);
+      });
+      hits.sort(function(a,b){return b[0]-a[0];});
+      meta.hidden=false; meta.textContent=hits.length?(hits.length+" lesson"+(hits.length===1?"":"s")+" found"+(hits.length>40?" — showing the top 40":"")):"No lessons found. Try a different word.";
+      res.innerHTML=hits.slice(0,40).map(function(h){ var e=h[1], url=(e.m==="F"?"NUR114_Final.html":"NUR114_Module"+e.m+".html")+"#"+e.id;
+        return '<a class="hs-item" href="'+url+'"><span class="hs-tag" style="background:'+COL[e.m]+'">'+(e.m==="F"?"Final":"Module "+e.m)+'</span><span class="hs-t">'+esc(e.t)+'</span><div class="hs-u">'+esc(e.u)+'</div><div class="hs-snip">'+snippet(e,terms)+'</div></a>'; }).join("");
+    }).catch(function(){ meta.hidden=false; meta.textContent="Search couldn't load — open the hub once while online so it can be saved."; });
+  }
+  inp.addEventListener("focus",load);
+  inp.addEventListener("input",function(){ clearTimeout(timer); timer=setTimeout(run,160); });
+  clr.addEventListener("click",function(){ inp.value=""; run(); inp.focus(); });
 })();
 </script>
 </body>
